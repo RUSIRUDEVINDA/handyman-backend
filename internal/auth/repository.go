@@ -1,0 +1,46 @@
+package auth
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Repository interface {
+	CreateUser(ctx context.Context, user *User) error
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
+}
+
+type repository struct {
+	db *pgxpool.Pool
+}
+
+func NewRepository(db *pgxpool.Pool) Repository {
+	return &repository{db: db}
+}
+
+func (r *repository) CreateUser(ctx context.Context, user *User) error {
+	query := `
+		INSERT INTO users (id, email, password_hash, role, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	_, err := r.db.Exec(ctx, query, user.ID, user.Email, user.PasswordHash, user.Role, user.CreatedAt)
+	return err
+}
+
+func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, email, password_hash, role, created_at FROM users WHERE email = $1`
+
+	var user User
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Role,
+		&user.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
