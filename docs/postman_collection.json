@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Handyman Backend API",
-    "description": "Manual Postman collection for testing the Handyman Backend API locally. Start with Health, then Register, Login, create a profile, create a booking, and continue through payments/reviews/location.",
+    "description": "Manual Postman collection for the Handyman Backend API. Run Health, Auth, profile, booking, then payment requests in order.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -18,11 +18,11 @@
       "value": ""
     },
     {
-      "key": "handyman_id",
+      "key": "payment_id",
       "value": ""
     },
     {
-      "key": "payment_booking_id",
+      "key": "handyman_id",
       "value": ""
     }
   ],
@@ -34,12 +34,7 @@
           "name": "GET /health",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
-            }
+            "url": "{{base_url}}/health"
           }
         }
       ]
@@ -61,11 +56,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
-            }
+            "url": "{{base_url}}/api/v1/auth/register"
           }
         },
         {
@@ -94,11 +85,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"handyman@test.com\",\n  \"password\": \"password123\",\n  \"role\": \"HANDYMAN\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "register"]
-            }
+            "url": "{{base_url}}/api/v1/auth/register"
           }
         },
         {
@@ -127,11 +114,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@test.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            }
+            "url": "{{base_url}}/api/v1/auth/login"
           }
         },
         {
@@ -161,17 +144,13 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"handyman@test.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            }
+            "url": "{{base_url}}/api/v1/auth/login"
           }
         }
       ]
     },
     {
-      "name": "Customers",
+      "name": "Profiles",
       "item": [
         {
           "name": "PUT /api/v1/customers/me",
@@ -197,11 +176,7 @@
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Test Customer\",\n  \"phone\": \"+94770000000\",\n  \"address\": \"Colombo\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/customers/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "customers", "me"]
-            }
+            "url": "{{base_url}}/api/v1/customers/me"
           }
         },
         {
@@ -218,19 +193,9 @@
               ]
             },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/customers/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "customers", "me"]
-            }
+            "url": "{{base_url}}/api/v1/customers/me"
           }
-        }
-      ]
-    },
-    {
-      "name": "Handymen",
-      "item": [
+        },
         {
           "name": "PUT /api/v1/handymen/me",
           "request": {
@@ -255,51 +220,14 @@
               "mode": "raw",
               "raw": "{\n  \"full_name\": \"Test Handyman\",\n  \"phone\": \"+94771111111\",\n  \"bio\": \"General repairs and plumbing\",\n  \"skills\": [\"plumbing\", \"electrical\"],\n  \"hourly_rate\": 2500,\n  \"status\": \"AVAILABLE\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/handymen/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "handymen", "me"]
-            }
-          }
-        },
-        {
-          "name": "GET /api/v1/handymen/me",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/handymen/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "handymen", "me"]
-            }
+            "url": "{{base_url}}/api/v1/handymen/me"
           }
         },
         {
           "name": "GET /api/v1/handymen?skill=plumbing",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/handymen?skill=plumbing",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "handymen"],
-              "query": [
-                {
-                  "key": "skill",
-                  "value": "plumbing"
-                }
-              ]
-            }
+            "url": "{{base_url}}/api/v1/handymen?skill=plumbing"
           }
         }
       ]
@@ -316,10 +244,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const body = pm.response.json();",
-                  "if (body.id) {",
-                  "  pm.collectionVariables.set('booking_id', body.id);",
-                  "  pm.collectionVariables.set('payment_booking_id', body.id);",
-                  "}"
+                  "if (body.id) pm.collectionVariables.set('booking_id', body.id);"
                 ]
               }
             }
@@ -344,13 +269,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"service_name\": \"Plumbing repair\",\n  \"notes\": \"Kitchen sink leak\",\n  \"amount_cents\": 5000\n}"
+              "raw": "{\n  \"service_name\": \"Plumbing repair\",\n  \"notes\": \"Kitchen sink leak\",\n  \"amount_cents\": 500000\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings"]
-            }
+            "url": "{{base_url}}/api/v1/bookings"
           }
         },
         {
@@ -367,65 +288,7 @@
               ]
             },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings"]
-            }
-          }
-        },
-        {
-          "name": "GET /api/v1/bookings/:id",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings", "{{booking_id}}"]
-            }
-          }
-        },
-        {
-          "name": "PUT /api/v1/bookings/:id/assign",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"handyman_id\": \"{{handyman_id}}\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/assign",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings", "{{booking_id}}", "assign"]
-            }
+            "url": "{{base_url}}/api/v1/bookings"
           }
         },
         {
@@ -442,56 +305,7 @@
               ]
             },
             "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/confirm",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings", "{{booking_id}}", "confirm"]
-            }
-          }
-        },
-        {
-          "name": "PUT /api/v1/bookings/:id/complete",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/complete",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings", "{{booking_id}}", "complete"]
-            }
-          }
-        },
-        {
-          "name": "PUT /api/v1/bookings/:id/cancel",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "bookings", "{{booking_id}}", "cancel"]
-            }
+            "url": "{{base_url}}/api/v1/bookings/{{booking_id}}/confirm"
           }
         }
       ]
@@ -523,37 +337,14 @@
               "mode": "raw",
               "raw": "{\n  \"lat\": 6.9271,\n  \"lng\": 79.8612\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/locations/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "locations", "me"]
-            }
+            "url": "{{base_url}}/api/v1/locations/me"
           }
         },
         {
           "name": "GET /api/v1/locations/nearby",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/locations/nearby?lat=6.9271&lng=79.8612&radius_km=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "locations", "nearby"],
-              "query": [
-                {
-                  "key": "lat",
-                  "value": "6.9271"
-                },
-                {
-                  "key": "lng",
-                  "value": "79.8612"
-                },
-                {
-                  "key": "radius_km",
-                  "value": "10"
-                }
-              ]
-            }
+            "url": "{{base_url}}/api/v1/locations/nearby?lat=6.9271&lng=79.8612&radius_km=10"
           }
         }
       ]
@@ -562,7 +353,19 @@
       "name": "Payments",
       "item": [
         {
-          "name": "POST /api/v1/payments/intents",
+          "name": "POST /api/v1/payments/payhere/checkout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.payment && body.payment.id) pm.collectionVariables.set('payment_id', body.payment.id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "auth": {
               "type": "bearer",
@@ -583,13 +386,66 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"booking_id\": \"{{payment_booking_id}}\",\n  \"amount_cents\": 5000,\n  \"currency\": \"usd\"\n}"
+              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"amount_cents\": 500000,\n  \"currency\": \"LKR\",\n  \"items\": \"Plumbing repair\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"Customer\",\n  \"email\": \"customer@test.com\",\n  \"phone\": \"0770000000\",\n  \"address\": \"Colombo\",\n  \"city\": \"Colombo\",\n  \"country\": \"Sri Lanka\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/api/v1/payments/intents",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "payments", "intents"]
+            "url": "{{base_url}}/api/v1/payments/payhere/checkout",
+            "description": "Returns PayHere sandbox action_url and form fields. The frontend should submit these fields as an HTML form POST to action_url."
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/cash",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.id) pm.collectionVariables.set('payment_id', body.id);"
+                ]
+              }
             }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"amount_cents\": 500000,\n  \"currency\": \"LKR\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/payments/cash"
+          }
+        },
+        {
+          "name": "PUT /api/v1/payments/cash/:payment_id/collected",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "url": "{{base_url}}/api/v1/payments/cash/{{payment_id}}/collected"
           }
         },
         {
@@ -606,104 +462,61 @@
               ]
             },
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/payments/bookings/{{payment_booking_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "payments", "bookings", "{{payment_booking_id}}"]
-            }
+            "url": "{{base_url}}/api/v1/payments/bookings/{{booking_id}}"
           }
         },
         {
-          "name": "POST /api/v1/payments/webhook",
+          "name": "POST /api/v1/payments/payhere/notify",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Stripe-Signature",
-                "value": "Use Stripe CLI for real signature verification"
+                "value": "application/x-www-form-urlencoded"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"note\": \"Use Stripe CLI: stripe listen --forward-to localhost:3000/api/v1/payments/webhook\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/payments/webhook",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "payments", "webhook"]
-            },
-            "description": "This endpoint verifies Stripe signatures. A manually typed Postman request will fail unless you generate a valid Stripe-Signature header. Use Stripe CLI for webhook testing."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Reviews",
-      "item": [
-        {
-          "name": "POST /api/v1/reviews",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
+              "mode": "urlencoded",
+              "urlencoded": [
                 {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
+                  "key": "merchant_id",
+                  "value": "122XXXX",
+                  "type": "text"
+                },
+                {
+                  "key": "order_id",
+                  "value": "{{payment_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "payment_id",
+                  "value": "SANDBOX_PAYMENT_ID",
+                  "type": "text"
+                },
+                {
+                  "key": "payhere_amount",
+                  "value": "5000.00",
+                  "type": "text"
+                },
+                {
+                  "key": "payhere_currency",
+                  "value": "LKR",
+                  "type": "text"
+                },
+                {
+                  "key": "status_code",
+                  "value": "2",
+                  "type": "text"
+                },
+                {
+                  "key": "md5sig",
+                  "value": "GENERATED_BY_PAYHERE",
+                  "type": "text"
                 }
               ]
             },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"handyman_id\": \"{{handyman_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Great work.\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/reviews",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reviews"]
-            }
-          }
-        },
-        {
-          "name": "GET /api/v1/reviews/handymen/:handyman_id",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/reviews/handymen/{{handyman_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "reviews", "handymen", "{{handyman_id}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "WebSocket",
-      "item": [
-        {
-          "name": "GET /api/v1/ws",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/ws",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "ws"]
-            },
-            "description": "Postman can open this as a WebSocket request if you create a new WebSocket tab and use ws://127.0.0.1:3000/api/v1/ws."
+            "url": "{{base_url}}/api/v1/payments/payhere/notify",
+            "description": "This endpoint verifies PayHere's md5sig. A fake md5sig will be rejected. For real sandbox testing, use a public tunnel for APP_BASE_URL so PayHere can call this notify URL."
           }
         }
       ]
