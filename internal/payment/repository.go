@@ -8,7 +8,8 @@ import (
 
 type Repository interface {
 	Create(ctx context.Context, payment *Payment) error
-	UpdateStatusByIntentID(ctx context.Context, paymentIntentID string, status Status) error
+	UpdateProviderResult(ctx context.Context, providerOrderID string, providerPaymentID *string, status Status) error
+	UpdateStatus(ctx context.Context, id string, status Status) error
 	GetByBookingID(ctx context.Context, bookingID string) (*Payment, error)
 }
 
@@ -26,14 +27,17 @@ func (r *repository) Create(ctx context.Context, payment *Payment) error {
 			id,
 			booking_id,
 			customer_id,
-			stripe_payment_intent_id,
+			method,
+			provider,
+			provider_payment_id,
+			provider_order_id,
 			amount_cents,
 			currency,
 			status,
 			created_at,
 			updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 	_, err := r.db.Exec(
 		ctx,
@@ -41,7 +45,10 @@ func (r *repository) Create(ctx context.Context, payment *Payment) error {
 		payment.ID,
 		payment.BookingID,
 		payment.CustomerID,
-		payment.StripePaymentIntentID,
+		payment.Method,
+		payment.Provider,
+		payment.ProviderPaymentID,
+		payment.ProviderOrderID,
 		payment.AmountCents,
 		payment.Currency,
 		payment.Status,
@@ -51,13 +58,25 @@ func (r *repository) Create(ctx context.Context, payment *Payment) error {
 	return err
 }
 
-func (r *repository) UpdateStatusByIntentID(ctx context.Context, paymentIntentID string, status Status) error {
+func (r *repository) UpdateProviderResult(ctx context.Context, providerOrderID string, providerPaymentID *string, status Status) error {
+	query := `
+		UPDATE payments
+		SET provider_payment_id = COALESCE($1, provider_payment_id),
+			status = $2,
+			updated_at = now()
+		WHERE provider_order_id = $3
+	`
+	_, err := r.db.Exec(ctx, query, providerPaymentID, status, providerOrderID)
+	return err
+}
+
+func (r *repository) UpdateStatus(ctx context.Context, id string, status Status) error {
 	query := `
 		UPDATE payments
 		SET status = $1, updated_at = now()
-		WHERE stripe_payment_intent_id = $2
+		WHERE id = $2
 	`
-	_, err := r.db.Exec(ctx, query, status, paymentIntentID)
+	_, err := r.db.Exec(ctx, query, status, id)
 	return err
 }
 
@@ -67,7 +86,10 @@ func (r *repository) GetByBookingID(ctx context.Context, bookingID string) (*Pay
 			id,
 			booking_id,
 			customer_id,
-			stripe_payment_intent_id,
+			method,
+			provider,
+			provider_payment_id,
+			provider_order_id,
 			amount_cents,
 			currency,
 			status,
@@ -84,7 +106,10 @@ func (r *repository) GetByBookingID(ctx context.Context, bookingID string) (*Pay
 		&payment.ID,
 		&payment.BookingID,
 		&payment.CustomerID,
-		&payment.StripePaymentIntentID,
+		&payment.Method,
+		&payment.Provider,
+		&payment.ProviderPaymentID,
+		&payment.ProviderOrderID,
 		&payment.AmountCents,
 		&payment.Currency,
 		&payment.Status,
