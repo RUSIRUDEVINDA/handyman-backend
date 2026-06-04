@@ -63,18 +63,19 @@ CREATE TABLE IF NOT EXISTS payments (
     id UUID PRIMARY KEY,
     booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    stripe_payment_intent_id VARCHAR(255) UNIQUE NOT NULL,
+    method VARCHAR(50) NOT NULL CHECK (method IN ('PAYHERE', 'CASH')),
+    provider VARCHAR(50) NOT NULL CHECK (provider IN ('PAYHERE', 'CASH')),
+    provider_payment_id VARCHAR(255) NULL,
+    provider_order_id VARCHAR(255) UNIQUE NULL,
     amount_cents BIGINT NOT NULL CHECK (amount_cents > 0),
-    currency VARCHAR(10) NOT NULL DEFAULT 'usd',
+    currency VARCHAR(10) NOT NULL DEFAULT 'LKR',
     status VARCHAR(50) NOT NULL CHECK (
         status IN (
-            'REQUIRES_PAYMENT_METHOD',
-            'REQUIRES_CONFIRMATION',
-            'REQUIRES_ACTION',
-            'PROCESSING',
+            'PENDING',
             'SUCCEEDED',
             'CANCELED',
-            'FAILED'
+            'FAILED',
+            'CHARGEDBACK'
         )
     ),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -83,6 +84,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE INDEX IF NOT EXISTS payments_booking_id_idx ON payments(booking_id);
 CREATE INDEX IF NOT EXISTS payments_customer_id_idx ON payments(customer_id);
+CREATE INDEX IF NOT EXISTS payments_provider_payment_id_idx ON payments(provider_payment_id);
 CREATE INDEX IF NOT EXISTS payments_status_idx ON payments(status);
 
 CREATE TABLE IF NOT EXISTS reviews (
