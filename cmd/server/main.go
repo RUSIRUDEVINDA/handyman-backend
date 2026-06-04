@@ -75,8 +75,15 @@ func main() {
 	location.NewHandler(locationService).RegisterRoutes(api, authGuard)
 
 	paymentRepo := payment.NewRepository(db)
-	paymentService := payment.NewService(cfg.StripeSecretKey, paymentRepo, eventBus)
-	payment.NewHandler(paymentService, cfg.StripeWebhookSecret).RegisterRoutes(api, authGuard)
+	paymentService := payment.NewService(paymentRepo, eventBus, payment.PayHereConfig{
+		MerchantID:     cfg.PayHereMerchantID,
+		MerchantSecret: cfg.PayHereMerchantSecret,
+		CheckoutURL:    cfg.PayHereCheckoutURL,
+		ReturnURL:      cfg.PayHereReturnURL,
+		CancelURL:      cfg.PayHereCancelURL,
+		NotifyURL:      cfg.AppBaseURL + "/api/v1/payments/payhere/notify",
+	})
+	payment.NewHandler(paymentService).RegisterRoutes(api, authGuard)
 
 	reviewRepo := review.NewRepository(db)
 	reviewService := review.NewService(reviewRepo, handymanRepo, eventBus)

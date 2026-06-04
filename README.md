@@ -1,6 +1,6 @@
 # handyman-backend
 
-A modular Go backend for a handyman marketplace. It uses Fiber for HTTP, Supabase/Postgres with PostGIS for data and location search, Stripe Payment Intents for payments, JWT auth, WebSockets for realtime updates, and an internal event bus for asynchronous module communication.
+A modular Go backend for a handyman marketplace. It uses Fiber for HTTP, Supabase/Postgres with PostGIS for data and location search, PayHere sandbox plus cash payments, JWT auth, WebSockets for realtime updates, and an internal event bus for asynchronous module communication.
 
 ## Folder Structure
 
@@ -14,7 +14,7 @@ internal/customer       Customer profile APIs
 internal/handyman       Handyman profile, skills, rating, availability
 internal/booking        Booking state machine and domain events
 internal/location       PostGIS location updates and nearby search
-internal/payment        Stripe Payment Intent and webhook endpoints
+internal/payment        PayHere sandbox checkout, PayHere notify/IPN, and cash payments
 internal/notification   Background worker that reacts to events
 internal/review         Reviews and rating aggregation
 internal/websocket      Realtime event broadcasting
@@ -38,13 +38,15 @@ Yes, this project uses goroutines in several places:
 1. Copy `.env.example` to `.env`.
 2. Add your Supabase `DB_URL`.
 3. Run `db/schema.sql` in the Supabase SQL editor.
-4. Add Stripe keys if you want payment intent creation and webhooks.
+4. Add PayHere sandbox keys if you want hosted checkout testing.
 5. Install dependencies and run:
 
 ```bash
 go mod tidy
 go run ./cmd/server
 ```
+
+If you already created the earlier Stripe-shaped `payments` table, run `db/migrate_payments_to_payhere_cash.sql` once in Supabase before using the new PayHere/cash endpoints.
 
 ## Postman Manual Testing
 
@@ -62,7 +64,7 @@ Recommended order:
 3. Auth / login customer
 4. Customers / PUT /customers/me
 5. Bookings / POST /bookings
-6. Payments / POST /payments/intents
+6. Payments / POST /payments/payhere/checkout or POST /payments/cash
 7. Payments / GET /payments/bookings/:booking_id
 ```
 
@@ -70,11 +72,9 @@ The login request automatically saves `token` as a collection variable. The crea
 
 For handyman-specific checks, register/login the handyman user first, then call `PUT /api/v1/handymen/me` and `PUT /api/v1/locations/me`.
 
-Stripe webhooks cannot be tested with a normal fake Postman body because the endpoint verifies `Stripe-Signature`. Use Stripe CLI instead:
+PayHere notify/IPN cannot be tested from localhost by PayHere directly. PayHere's documentation requires the `notify_url` to be publicly accessible, and notifications are sent as `application/x-www-form-urlencoded`.
 
-```bash
-stripe listen --forward-to localhost:3000/api/v1/payments/webhook
-```
+For local testing, use a tunnel such as ngrok and set `APP_BASE_URL` to the public tunnel URL before starting the server.
 
 ## Main Routes
 
@@ -96,9 +96,11 @@ PUT    /api/v1/bookings/:id/complete
 PUT    /api/v1/bookings/:id/cancel
 PUT    /api/v1/locations/me
 GET    /api/v1/locations/nearby?lat=6.9271&lng=79.8612&radius_km=10
-POST   /api/v1/payments/intents
+POST   /api/v1/payments/payhere/checkout
+POST   /api/v1/payments/cash
+PUT    /api/v1/payments/cash/:payment_id/collected
 GET    /api/v1/payments/bookings/:booking_id
-POST   /api/v1/payments/webhook
+POST   /api/v1/payments/payhere/notify
 POST   /api/v1/reviews
 GET    /api/v1/reviews/handymen/:handyman_id
 GET    /api/v1/ws
