@@ -11,6 +11,7 @@ db/schema.sql           Supabase/Postgres schema, including PostGIS
 internal/events         In-memory domain event bus
 internal/auth           Registration, login, JWT creation
 internal/customer       Customer profile APIs
+internal/dashboard      Customer, handyman, and admin summary dashboards
 internal/handyman       Handyman profile, skills, rating, availability
 internal/booking        Booking state machine and domain events
 internal/location       PostGIS location updates and nearby search
@@ -48,6 +49,8 @@ go run ./cmd/server
 
 If you already created the earlier Stripe-shaped `payments` table, run `db/migrate_payments_to_payhere_cash.sql` once in Supabase before using the new PayHere/cash endpoints.
 
+If you already created the earlier booking table, run `db/migrate_booking_approval_flow.sql` once so bookings support the approval-before-payment flow.
+
 ## Postman Manual Testing
 
 Import this collection into Postman:
@@ -64,9 +67,20 @@ Recommended order:
 3. Auth / login customer
 4. Customers / PUT /customers/me
 5. Bookings / POST /bookings
-6. Payments / POST /payments/payhere/checkout or POST /payments/cash
-7. Payments / GET /payments/bookings/:booking_id
+6. Auth / login handyman
+7. Bookings / PUT /bookings/:id/approve
+8. Auth / login customer again
+9. Payments / POST /payments/payhere/checkout or POST /payments/cash
+10. Payments / GET /payments/bookings/:booking_id
+11. Bookings / PUT /bookings/:id/start
+12. Bookings / PUT /bookings/:id/complete
+13. Reviews / POST /reviews
+14. Dashboards / GET /dashboards/customer
+15. Dashboards / GET /dashboards/handyman
+16. Dashboards / GET /dashboards/admin
 ```
+
+The admin dashboard requires an `ADMIN` JWT. For development, create a normal user and update that user's role to `ADMIN` in Supabase, then login and use that token.
 
 The login request automatically saves `token` as a collection variable. The create booking request automatically saves `booking_id` and `payment_booking_id`.
 
@@ -84,6 +98,9 @@ POST   /api/v1/auth/register
 POST   /api/v1/auth/login
 GET    /api/v1/customers/me
 PUT    /api/v1/customers/me
+GET    /api/v1/dashboards/customer
+GET    /api/v1/dashboards/handyman
+GET    /api/v1/dashboards/admin
 GET    /api/v1/handymen?skill=plumbing
 GET    /api/v1/handymen/me
 PUT    /api/v1/handymen/me
@@ -91,7 +108,9 @@ POST   /api/v1/bookings
 GET    /api/v1/bookings
 GET    /api/v1/bookings/:id
 PUT    /api/v1/bookings/:id/assign
-PUT    /api/v1/bookings/:id/confirm
+PUT    /api/v1/bookings/:id/approve
+PUT    /api/v1/bookings/:id/reject
+PUT    /api/v1/bookings/:id/start
 PUT    /api/v1/bookings/:id/complete
 PUT    /api/v1/bookings/:id/cancel
 PUT    /api/v1/locations/me

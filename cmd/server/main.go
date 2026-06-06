@@ -12,6 +12,7 @@ import (
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/auth"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/booking"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/customer"
+	"github.com/RUSIRUDEVINDA/handyman-backend/internal/dashboard"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/events"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/handyman"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/location"
@@ -53,6 +54,7 @@ func main() {
 
 	api := app.Group("/api/v1")
 	authGuard := appmiddleware.RequireAuth(cfg.JWTSecret)
+	adminGuard := appmiddleware.RequireRole("ADMIN")
 
 	authRepo := auth.NewRepository(db)
 	authService := auth.NewService(authRepo, cfg.JWTSecret)
@@ -75,7 +77,7 @@ func main() {
 	location.NewHandler(locationService).RegisterRoutes(api, authGuard)
 
 	paymentRepo := payment.NewRepository(db)
-	paymentService := payment.NewService(paymentRepo, eventBus, payment.PayHereConfig{
+	paymentService := payment.NewService(paymentRepo, bookingRepo, eventBus, payment.PayHereConfig{
 		MerchantID:     cfg.PayHereMerchantID,
 		MerchantSecret: cfg.PayHereMerchantSecret,
 		CheckoutURL:    cfg.PayHereCheckoutURL,
@@ -86,8 +88,12 @@ func main() {
 	payment.NewHandler(paymentService).RegisterRoutes(api, authGuard)
 
 	reviewRepo := review.NewRepository(db)
-	reviewService := review.NewService(reviewRepo, handymanRepo, eventBus)
+	reviewService := review.NewService(reviewRepo, bookingRepo, handymanRepo, eventBus)
 	review.NewHandler(reviewService).RegisterRoutes(api, authGuard)
+
+	dashboardRepo := dashboard.NewRepository(db)
+	dashboardService := dashboard.NewService(dashboardRepo)
+	dashboard.NewHandler(dashboardService).RegisterRoutes(api, authGuard, adminGuard)
 
 	notificationWorker := notification.NewWorker(eventBus, notification.NewService())
 	go notificationWorker.Start(ctx)
