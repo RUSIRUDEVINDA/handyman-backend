@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RUSIRUDEVINDA/handyman-backend/internal/booking"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/events"
 	"github.com/google/uuid"
 )
@@ -26,18 +27,19 @@ type Service interface {
 	CreatePayHereCheckout(ctx context.Context, customerID string, req CreatePayHereCheckoutRequest) (*PayHereCheckoutResponse, error)
 	CreateCashPayment(ctx context.Context, customerID string, req CreateCashPaymentRequest) (*Payment, error)
 	GetByBookingID(ctx context.Context, bookingID string) (*Payment, error)
-	MarkCashCollected(ctx context.Context, paymentID string) error
+	MarkCashCollected(ctx context.Context, paymentID string, handymanID string) error
 	HandlePayHereNotification(ctx context.Context, notification PayHereNotification) error
 }
 
 type service struct {
 	repo          Repository
+	bookingRepo   booking.Repository
 	bus           events.Bus
 	payHereConfig PayHereConfig
 }
 
-func NewService(repo Repository, bus events.Bus, payHereConfig PayHereConfig) Service {
-	return &service{repo: repo, bus: bus, payHereConfig: payHereConfig}
+func NewService(repo Repository, bookingRepo booking.Repository, bus events.Bus, payHereConfig PayHereConfig) Service {
+	return &service{repo: repo, bookingRepo: bookingRepo, bus: bus, payHereConfig: payHereConfig}
 }
 
 func (s *service) CreatePayHereCheckout(ctx context.Context, customerID string, req CreatePayHereCheckoutRequest) (*PayHereCheckoutResponse, error) {
@@ -47,8 +49,18 @@ func (s *service) CreatePayHereCheckout(ctx context.Context, customerID string, 
 	if req.BookingID == "" {
 		return nil, errors.New("booking_id is required")
 	}
+	bookingRecord, err := s.validatePayableBooking(ctx, customerID, req.BookingID)
+	if err != nil {
+		return nil, err
+	}
+	if req.AmountCents == 0 {
+		req.AmountCents = bookingRecord.AmountCents
+	}
 	if req.AmountCents <= 0 {
 		return nil, errors.New("amount_cents must be greater than zero")
+	}
+	if bookingRecord.AmountCents > 0 && req.AmountCents != bookingRecord.AmountCents {
+		return nil, errors.New("payment amount must match booking amount")
 	}
 	if req.Currency == "" {
 		req.Currency = "LKR"
@@ -78,6 +90,9 @@ func (s *service) CreatePayHereCheckout(ctx context.Context, customerID string, 
 	}
 
 	if err := s.repo.Create(ctx, &payment); err != nil {
+		return nil, err
+	}
+	if err := s.bookingRepo.UpdateStatus(ctx, req.BookingID, booking.StatusPaymentPending); err != nil {
 		return nil, err
 	}
 
@@ -117,8 +132,18 @@ func (s *service) CreateCashPayment(ctx context.Context, customerID string, req 
 	if req.BookingID == "" {
 		return nil, errors.New("booking_id is required")
 	}
+	bookingRecord, err := s.validatePayableBooking(ctx, customerID, req.BookingID)
+	if err != nil {
+		return nil, err
+	}
+	if req.AmountCents == 0 {
+		req.AmountCents = bookingRecord.AmountCents
+	}
 	if req.AmountCents <= 0 {
 		return nil, errors.New("amount_cents must be greater than zero")
+	}
+	if bookingRecord.AmountCents > 0 && req.AmountCents != bookingRecord.AmountCents {
+		return nil, errors.New("payment amount must match booking amount")
 	}
 	if req.Currency == "" {
 		req.Currency = "LKR"
@@ -141,6 +166,12 @@ func (s *service) CreateCashPayment(ctx context.Context, customerID string, req 
 	if err := s.repo.Create(ctx, payment); err != nil {
 		return nil, err
 	}
+	if err := s.bookingRepo.UpdateStatus(ctx, req.BookingID, booking.StatusConfirmed); err != nil {
+		return nil, err
+	}
+	if booking, err := s.bookingRepo.GetByID(ctx, req.BookingID); err == nil {
+		s.bus.Publish(events.BookingConfirmed, booking)
+	}
 	s.bus.Publish(events.PaymentCreated, payment)
 	return payment, nil
 }
@@ -149,7 +180,21 @@ func (s *service) GetByBookingID(ctx context.Context, bookingID string) (*Paymen
 	return s.repo.GetByBookingID(ctx, bookingID)
 }
 
-func (s *service) MarkCashCollected(ctx context.Context, paymentID string) error {
+func (s *service) MarkCashCollected(ctx context.Context, paymentID string, handymanID string) error {
+	payment, err := s.repo.GetByID(ctx, paymentID)
+	if err != nil {
+		return errors.New("payment not found")
+	}
+	if payment.Method != MethodCash {
+		return errors.New("only cash payments can be marked collected manually")
+	}
+	bookingRecord, err := s.bookingRepo.GetByID(ctx, payment.BookingID)
+	if err != nil {
+		return errors.New("booking not found")
+	}
+	if bookingRecord.HandymanID == nil || *bookingRecord.HandymanID != handymanID {
+		return errors.New("only the assigned handyman can mark cash collected")
+	}
 	if err := s.repo.UpdateStatus(ctx, paymentID, StatusSucceeded); err != nil {
 		return err
 	}
@@ -173,6 +218,18 @@ func (s *service) HandlePayHereNotification(ctx context.Context, notification Pa
 	if err := s.repo.UpdateProviderResult(ctx, notification.OrderID, providerPaymentID, status); err != nil {
 		return err
 	}
+	payment, err := s.repo.GetByProviderOrderID(ctx, notification.OrderID)
+	if err != nil {
+		return err
+	}
+	if status == StatusSucceeded {
+		if err := s.bookingRepo.UpdateStatus(ctx, payment.BookingID, booking.StatusConfirmed); err != nil {
+			return err
+		}
+		if booking, err := s.bookingRepo.GetByID(ctx, payment.BookingID); err == nil {
+			s.bus.Publish(events.BookingConfirmed, booking)
+		}
+	}
 
 	eventType := events.PaymentFailed
 	if status == StatusSucceeded {
@@ -185,6 +242,20 @@ func (s *service) HandlePayHereNotification(ctx context.Context, notification Pa
 		Status:            string(status),
 	})
 	return nil
+}
+
+func (s *service) validatePayableBooking(ctx context.Context, customerID string, bookingID string) (*booking.Booking, error) {
+	bookingRecord, err := s.bookingRepo.GetByID(ctx, bookingID)
+	if err != nil {
+		return nil, errors.New("booking not found")
+	}
+	if bookingRecord.CustomerID != customerID {
+		return nil, errors.New("booking does not belong to this customer")
+	}
+	if bookingRecord.Status != booking.StatusApproved && bookingRecord.Status != booking.StatusPaymentPending {
+		return nil, errors.New("handyman must approve the booking before payment")
+	}
+	return bookingRecord, nil
 }
 
 func (s *service) generateCheckoutHash(orderID string, amount string, currency string) string {
