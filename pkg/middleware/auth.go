@@ -34,3 +34,21 @@ func RequireAuth(secret string) fiber.Handler {
 		return c.Next()
 	}
 }
+
+func RequireRole(roles ...string) fiber.Handler {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[role] = struct{}{}
+	}
+
+	return func(c *fiber.Ctx) error {
+		role, ok := c.Locals("role").(string)
+		if !ok {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "missing role"})
+		}
+		if _, ok := allowed[role]; !ok {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "forbidden"})
+		}
+		return c.Next()
+	}
+}
