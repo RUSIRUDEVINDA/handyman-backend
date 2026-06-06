@@ -5,10 +5,14 @@ import "time"
 type Status string
 
 const (
-	StatusPending   Status = "PENDING"
-	StatusConfirmed Status = "CONFIRMED"
-	StatusCompleted Status = "COMPLETED"
-	StatusCancelled Status = "CANCELLED"
+	StatusRequested      Status = "REQUESTED"
+	StatusApproved       Status = "APPROVED"
+	StatusRejected       Status = "REJECTED"
+	StatusPaymentPending Status = "PAYMENT_PENDING"
+	StatusConfirmed      Status = "CONFIRMED"
+	StatusInProgress     Status = "IN_PROGRESS"
+	StatusCompleted      Status = "COMPLETED"
+	StatusCancelled      Status = "CANCELLED"
 )
 
 type Booking struct {
