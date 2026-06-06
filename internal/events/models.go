@@ -6,7 +6,10 @@ type EventType string
 
 const (
 	BookingCreated     EventType = "booking.created"
+	BookingApproved    EventType = "booking.approved"
+	BookingRejected    EventType = "booking.rejected"
 	BookingConfirmed   EventType = "booking.confirmed"
+	BookingStarted     EventType = "booking.started"
 	BookingCompleted   EventType = "booking.completed"
 	BookingCancelled   EventType = "booking.cancelled"
 	PaymentCreated     EventType = "payment.created"

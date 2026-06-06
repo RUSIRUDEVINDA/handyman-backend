@@ -49,7 +49,18 @@ CREATE TABLE IF NOT EXISTS bookings (
     handyman_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
     service_name VARCHAR(255) NOT NULL,
     notes TEXT NOT NULL DEFAULT '',
-    status VARCHAR(50) NOT NULL CHECK (status IN ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED')),
+    status VARCHAR(50) NOT NULL CHECK (
+        status IN (
+            'REQUESTED',
+            'APPROVED',
+            'REJECTED',
+            'PAYMENT_PENDING',
+            'CONFIRMED',
+            'IN_PROGRESS',
+            'COMPLETED',
+            'CANCELLED'
+        )
+    ),
     amount_cents BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
