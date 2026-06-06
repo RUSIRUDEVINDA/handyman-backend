@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/RUSIRUDEVINDA/handyman-backend/internal/booking"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/events"
 	"github.com/RUSIRUDEVINDA/handyman-backend/internal/handyman"
 	"github.com/google/uuid"
@@ -17,17 +18,31 @@ type Service interface {
 
 type service struct {
 	repo         Repository
+	bookingRepo  booking.Repository
 	handymanRepo handyman.Repository
 	bus          events.Bus
 }
 
-func NewService(repo Repository, handymanRepo handyman.Repository, bus events.Bus) Service {
-	return &service{repo: repo, handymanRepo: handymanRepo, bus: bus}
+func NewService(repo Repository, bookingRepo booking.Repository, handymanRepo handyman.Repository, bus events.Bus) Service {
+	return &service{repo: repo, bookingRepo: bookingRepo, handymanRepo: handymanRepo, bus: bus}
 }
 
 func (s *service) CreateReview(ctx context.Context, customerID string, req CreateReviewRequest) (*Review, error) {
 	if req.Rating < 1 || req.Rating > 5 {
 		return nil, errors.New("rating must be between 1 and 5")
+	}
+	bookingRecord, err := s.bookingRepo.GetByID(ctx, req.BookingID)
+	if err != nil {
+		return nil, errors.New("booking not found")
+	}
+	if bookingRecord.CustomerID != customerID {
+		return nil, errors.New("only the booking customer can review")
+	}
+	if bookingRecord.HandymanID == nil || *bookingRecord.HandymanID != req.HandymanID {
+		return nil, errors.New("review handyman does not match booking handyman")
+	}
+	if bookingRecord.Status != booking.StatusCompleted {
+		return nil, errors.New("booking must be completed before review")
 	}
 	review := &Review{
 		ID:         uuid.NewString(),
