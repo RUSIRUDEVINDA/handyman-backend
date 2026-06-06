@@ -50,8 +50,8 @@ func (h *Handler) createCashPayment(c *fiber.Ctx) error {
 }
 
 func (h *Handler) markCashCollected(c *fiber.Ctx) error {
-	if err := h.service.MarkCashCollected(c.UserContext(), c.Params("payment_id")); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to mark cash payment collected"})
+	if err := h.service.MarkCashCollected(c.UserContext(), c.Params("payment_id"), c.Locals("user_id").(string)); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }

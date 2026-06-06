@@ -10,7 +10,9 @@ type Repository interface {
 	Create(ctx context.Context, payment *Payment) error
 	UpdateProviderResult(ctx context.Context, providerOrderID string, providerPaymentID *string, status Status) error
 	UpdateStatus(ctx context.Context, id string, status Status) error
+	GetByID(ctx context.Context, id string) (*Payment, error)
 	GetByBookingID(ctx context.Context, bookingID string) (*Payment, error)
+	GetByProviderOrderID(ctx context.Context, providerOrderID string) (*Payment, error)
 }
 
 type repository struct {
@@ -103,6 +105,56 @@ func (r *repository) GetByBookingID(ctx context.Context, bookingID string) (*Pay
 
 	var payment Payment
 	err := r.db.QueryRow(ctx, query, bookingID).Scan(
+		&payment.ID,
+		&payment.BookingID,
+		&payment.CustomerID,
+		&payment.Method,
+		&payment.Provider,
+		&payment.ProviderPaymentID,
+		&payment.ProviderOrderID,
+		&payment.AmountCents,
+		&payment.Currency,
+		&payment.Status,
+		&payment.CreatedAt,
+		&payment.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &payment, nil
+}
+
+func (r *repository) GetByID(ctx context.Context, id string) (*Payment, error) {
+	return r.getOne(ctx, `WHERE id = $1`, id)
+}
+
+func (r *repository) GetByProviderOrderID(ctx context.Context, providerOrderID string) (*Payment, error) {
+	return r.getOne(ctx, `WHERE provider_order_id = $1`, providerOrderID)
+}
+
+func (r *repository) getOne(ctx context.Context, where string, arg string) (*Payment, error) {
+	query := `
+		SELECT
+			id,
+			booking_id,
+			customer_id,
+			method,
+			provider,
+			provider_payment_id,
+			provider_order_id,
+			amount_cents,
+			currency,
+			status,
+			created_at,
+			updated_at
+		FROM payments
+		` + where + `
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	var payment Payment
+	err := r.db.QueryRow(ctx, query, arg).Scan(
 		&payment.ID,
 		&payment.BookingID,
 		&payment.CustomerID,
