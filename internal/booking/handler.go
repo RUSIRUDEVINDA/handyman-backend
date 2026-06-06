@@ -1,10 +1,6 @@
 package booking
 
-import (
-	"context"
-
-	"github.com/gofiber/fiber/v2"
-)
+import "github.com/gofiber/fiber/v2"
 
 type Handler struct {
 	service Service
@@ -20,7 +16,9 @@ func (h *Handler) RegisterRoutes(router fiber.Router, auth fiber.Handler) {
 	routes.Get("/", h.listMine)
 	routes.Get("/:id", h.get)
 	routes.Put("/:id/assign", h.assign)
-	routes.Put("/:id/confirm", h.confirm)
+	routes.Put("/:id/approve", h.approve)
+	routes.Put("/:id/reject", h.reject)
+	routes.Put("/:id/start", h.start)
 	routes.Put("/:id/complete", h.complete)
 	routes.Put("/:id/cancel", h.cancel)
 }
@@ -75,22 +73,42 @@ func (h *Handler) assign(c *fiber.Ctx) error {
 	return c.JSON(booking)
 }
 
-func (h *Handler) confirm(c *fiber.Ctx) error {
-	return h.transition(c, h.service.Confirm)
+func (h *Handler) approve(c *fiber.Ctx) error {
+	booking, err := h.service.Approve(c.UserContext(), c.Params("id"), c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(booking)
+}
+
+func (h *Handler) reject(c *fiber.Ctx) error {
+	booking, err := h.service.Reject(c.UserContext(), c.Params("id"), c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(booking)
+}
+
+func (h *Handler) start(c *fiber.Ctx) error {
+	booking, err := h.service.Start(c.UserContext(), c.Params("id"), c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(booking)
 }
 
 func (h *Handler) complete(c *fiber.Ctx) error {
-	return h.transition(c, h.service.Complete)
+	booking, err := h.service.Complete(c.UserContext(), c.Params("id"), c.Locals("user_id").(string))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(booking)
 }
 
 func (h *Handler) cancel(c *fiber.Ctx) error {
-	return h.transition(c, h.service.Cancel)
-}
-
-func (h *Handler) transition(c *fiber.Ctx, fn func(ctx context.Context, id string) (*Booking, error)) error {
-	booking, err := fn(c.UserContext(), c.Params("id"))
+	booking, err := h.service.Cancel(c.UserContext(), c.Params("id"), c.Locals("user_id").(string))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update booking"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(booking)
 }
