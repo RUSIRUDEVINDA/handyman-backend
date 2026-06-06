@@ -53,7 +53,10 @@ func (h *Hub) Broadcast(message any) {
 func (h *Hub) Start(ctx context.Context) {
 	eventTypes := []events.EventType{
 		events.BookingCreated,
+		events.BookingApproved,
+		events.BookingRejected,
 		events.BookingConfirmed,
+		events.BookingStarted,
 		events.BookingCompleted,
 		events.BookingCancelled,
 		events.PaymentSucceeded,

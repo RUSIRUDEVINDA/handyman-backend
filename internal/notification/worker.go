@@ -19,7 +19,9 @@ func NewWorker(bus events.Bus, service Service) *Worker {
 
 func (w *Worker) Start(ctx context.Context) {
 	bookingCreated := w.bus.Subscribe(events.BookingCreated)
+	bookingApproved := w.bus.Subscribe(events.BookingApproved)
 	bookingConfirmed := w.bus.Subscribe(events.BookingConfirmed)
+	bookingStarted := w.bus.Subscribe(events.BookingStarted)
 	paymentSucceeded := w.bus.Subscribe(events.PaymentSucceeded)
 
 	log.Println("notification worker started")
@@ -31,11 +33,19 @@ func (w *Worker) Start(ctx context.Context) {
 			return
 		case event, ok := <-bookingCreated:
 			if ok {
-				go w.notify("New booking created", event)
+				go w.notify("New job request", event)
+			}
+		case event, ok := <-bookingApproved:
+			if ok {
+				go w.notify("Booking approved - payment can continue", event)
 			}
 		case event, ok := <-bookingConfirmed:
 			if ok {
 				go w.notify("Booking confirmed", event)
+			}
+		case event, ok := <-bookingStarted:
+			if ok {
+				go w.notify("Job started", event)
 			}
 		case event, ok := <-paymentSucceeded:
 			if ok {
