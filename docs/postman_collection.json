@@ -10,7 +10,15 @@
       "value": "http://127.0.0.1:3000"
     },
     {
-      "key": "token",
+      "key": "customer_token",
+      "value": ""
+    },
+    {
+      "key": "handyman_token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
       "value": ""
     },
     {
@@ -97,7 +105,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const body = pm.response.json();",
-                  "if (body.token) pm.collectionVariables.set('token', body.token);"
+                  "if (body.token) pm.collectionVariables.set('customer_token', body.token);"
                 ]
               }
             }
@@ -126,7 +134,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "const body = pm.response.json();",
-                  "if (body.token) pm.collectionVariables.set('token', body.token);",
+                  "if (body.token) pm.collectionVariables.set('handyman_token', body.token);",
                   "if (body.user && body.user.id) pm.collectionVariables.set('handyman_id', body.user.id);"
                 ]
               }
@@ -160,7 +168,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -187,7 +195,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -204,7 +212,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{handyman_token}}",
                   "type": "string"
                 }
               ]
@@ -255,7 +263,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -282,7 +290,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -292,20 +300,54 @@
           }
         },
         {
-          "name": "PUT /api/v1/bookings/:id/confirm",
+          "name": "PUT /api/v1/bookings/:id/approve",
           "request": {
             "auth": {
               "type": "bearer",
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{handyman_token}}",
                   "type": "string"
                 }
               ]
             },
             "method": "PUT",
-            "url": "{{base_url}}/api/v1/bookings/{{booking_id}}/confirm"
+            "url": "{{base_url}}/api/v1/bookings/{{booking_id}}/approve"
+          }
+        },
+        {
+          "name": "PUT /api/v1/bookings/:id/start",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{handyman_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "url": "{{base_url}}/api/v1/bookings/{{booking_id}}/start"
+          }
+        },
+        {
+          "name": "PUT /api/v1/bookings/:id/complete",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{handyman_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "url": "{{base_url}}/api/v1/bookings/{{booking_id}}/complete"
           }
         }
       ]
@@ -321,7 +363,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{handyman_token}}",
                   "type": "string"
                 }
               ]
@@ -372,7 +414,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{handyman_token}}",
                   "type": "string"
                 }
               ]
@@ -412,7 +454,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -439,7 +481,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -456,7 +498,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{token}}",
+                  "value": "{{customer_token}}",
                   "type": "string"
                 }
               ]
@@ -517,6 +559,102 @@
             },
             "url": "{{base_url}}/api/v1/payments/payhere/notify",
             "description": "This endpoint verifies PayHere's md5sig. A fake md5sig will be rejected. For real sandbox testing, use a public tunnel for APP_BASE_URL so PayHere can call this notify URL."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "POST /api/v1/reviews",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"handyman_id\": \"{{handyman_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Great service.\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/reviews"
+          }
+        },
+        {
+          "name": "GET /api/v1/reviews/handymen/:handyman_id",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/reviews/handymen/{{handyman_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "GET /api/v1/dashboards/customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/dashboards/customer"
+          }
+        },
+        {
+          "name": "GET /api/v1/dashboards/handyman",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{handyman_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/dashboards/handyman"
+          }
+        },
+        {
+          "name": "GET /api/v1/dashboards/admin",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/dashboards/admin",
+            "description": "Requires an ADMIN token. Create an admin by updating a user role in Supabase, then login and place that token in the admin_token collection variable."
           }
         }
       ]
